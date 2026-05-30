@@ -1,6 +1,6 @@
-import Vegetable from "../Model/vegetable.js";
-import { ApiResponse } from "../utility/ApiResponse.js";
-import { asyncHandler } from "../utility/AsyncHandler.js";
+import Vegetable from "../Model/vegetable.model.js";
+import { ApiResponse } from "../utility/ApiResponse.utility.js";
+import { asyncHandler } from "../utility/AsyncHandler.utility.js";
 
 // Cache for frequently accessed data
 const cache = new Map();

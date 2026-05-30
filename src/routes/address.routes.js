@@ -14,9 +14,9 @@ import {
   autocompleteAddresses,
   optimizeDeliveryRoute,
   getAddressAnalytics,
-} from "../controller/address.js";
+} from "../controller/address.controller.js";
 
-import { verifyJWT, isAdmin } from "../middleware/auth.js";
+import { verifyJWT, isAdmin } from "../middleware/auth.middleware.js";
 
 const router = Router();
 

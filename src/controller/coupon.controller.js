@@ -1,7 +1,7 @@
-import Coupon from "../Model/coupon.js";
-import { ApiResponse } from "../utility/ApiResponse.js";
-import { asyncHandler } from "../utility/AsyncHandler.js";
-import { ApiError } from "../utility/ApiError.js";
+import Coupon from "../Model/coupon.model.js";
+import { ApiResponse } from "../utility/ApiResponse.utility.js";
+import { asyncHandler } from "../utility/AsyncHandler.utility.js";
+import { ApiError } from "../utility/ApiError.utility.js";
 
 // Validate coupon code
 export const validateCoupon = asyncHandler(async (req, res) => {

@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
-import { ApiError } from "../utility/ApiError.js";
-import { asyncHandler } from "../utility/AsyncHandler.js";
-import User from "../Model/user.js";
+import { ApiError } from "../utility/ApiError.utility.js";
+import { asyncHandler } from "../utility/AsyncHandler.utility.js";
+import User from "../Model/user.model.js";
 import mongoose from "mongoose";
 
 // ================= CONFIGURATION =================

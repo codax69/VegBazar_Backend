@@ -1,7 +1,7 @@
-import Testimonial from "../Model/testimonial.js";
-import { ApiError } from "../utility/ApiError.js";
-import { ApiResponse } from "../utility/ApiResponse.js";
-import { asyncHandler } from "../utility/AsyncHandler.js";
+import Testimonial from "../Model/testimonial.model.js";
+import { ApiError } from "../utility/ApiError.utility.js";
+import { ApiResponse } from "../utility/ApiResponse.utility.js";
+import { asyncHandler } from "../utility/AsyncHandler.utility.js";
 
 // Create testimonial
 export const createTestimonial = asyncHandler(async (req, res) => {

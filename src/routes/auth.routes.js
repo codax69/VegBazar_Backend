@@ -30,9 +30,9 @@ import {
   getAllUsers,
   updateUserStatus,
   deleteUser,
-} from "../controller/auth.js";
+} from "../controller/auth.controller.js";
 
-import { verifyJWT, isAdmin } from "../middleware/auth.js";
+import { verifyJWT, isAdmin } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 

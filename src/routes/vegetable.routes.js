@@ -6,9 +6,9 @@ import {
   getVegetables,
   getVegetableById,
   homepageApi,
-} from "../controller/vegetable.js";
+} from "../controller/vegetable.controller.js";
 
-import { verifyJWT, isAdmin } from "../middleware/auth.js";
+import { verifyJWT, isAdmin } from "../middleware/auth.middleware.js";
 
 const router = Router();
 

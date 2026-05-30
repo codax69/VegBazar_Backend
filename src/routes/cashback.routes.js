@@ -5,7 +5,7 @@ import {
   getOrderCashback,
   getRecentCashback,
 } from "../controller/cashback.controller.js";
-import { verifyJWT } from "../middleware/auth.js";
+import { verifyJWT } from "../middleware/auth.middleware.js";
 
 const router = Router();
 

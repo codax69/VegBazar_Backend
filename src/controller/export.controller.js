@@ -1,4 +1,4 @@
-import Customer from "../Model/customer.js"; 
+import Customer from "../Model/customer.model.js"; 
 import nodemailer from "nodemailer";
 
 export const exportCustomers = async (req, res) => {

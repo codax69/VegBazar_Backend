@@ -1,8 +1,8 @@
-import Address from "../Model/address.js";
-import User from "../Model/user.js";
-import { asyncHandler } from "../utility/AsyncHandler.js";
-import { ApiResponse } from "../utility/ApiResponse.js";
-import { ApiError } from "../utility/ApiError.js";
+import Address from "../Model/address.model.js";
+import User from "../Model/user.model.js";
+import { asyncHandler } from "../utility/AsyncHandler.utility.js";
+import { ApiResponse } from "../utility/ApiResponse.utility.js";
+import { ApiError } from "../utility/ApiError.utility.js";
 
 const ADDRESS_TYPES = new Set(["home", "work", "other"]);
 

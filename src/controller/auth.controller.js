@@ -1,16 +1,16 @@
-import User from "../Model/user.js";
+import User from "../Model/user.model.js";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
-import { asyncHandler } from "../utility/AsyncHandler.js";
-import { ApiResponse } from "../utility/ApiResponse.js";
-import { ApiError } from "../utility/ApiError.js";
+import { asyncHandler } from "../utility/AsyncHandler.utility.js";
+import { ApiResponse } from "../utility/ApiResponse.utility.js";
+import { ApiError } from "../utility/ApiError.utility.js";
 import "dotenv/config";
 import { OAuth2Client } from "google-auth-library";
 import {
   sendPasswordResetEmail,
   sendEmailVerification,
   sendWelcomeEmail,
-} from "../utility/emailService.js";
+} from "../utility/emailService.utility.js";
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 

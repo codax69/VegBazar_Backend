@@ -1,6 +1,6 @@
 import { expressjwt } from "express-jwt";
 import jwksRsa from "jwks-rsa";
-import User from "../Model/user.js";
+import User from "../Model/user.model.js";
 import "dotenv/config";
 
 /* -------------------------------------------------

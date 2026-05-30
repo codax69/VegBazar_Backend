@@ -1,4 +1,4 @@
-import Order from "../Model/order.js";
+import Order from "../Model/order.model.js";
 import mongoose from "mongoose";
 
 // ===== DASHBOARD OVERVIEW =====

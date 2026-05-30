@@ -4,9 +4,9 @@ import {
   getCities,
   deleteCity,
   updateCity,
-} from "../controller/City.js";
+} from "../controller/City.controller.js";
 
-import { verifyJWT, isAdmin } from "../middleware/auth.js";
+import { verifyJWT, isAdmin } from "../middleware/auth.middleware.js";
 
 const router = Router();
 

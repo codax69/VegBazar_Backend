@@ -13,10 +13,10 @@ import {
   getOrdersByStatus,
   getOrdersByMultipleStatuses,
   getOrderStatusStats,
-} from "../controller/order.js";
+} from "../controller/order.controller.js";
 
-import { verifyJWT, isAdmin, optionalAuth } from "../middleware/auth.js";
-import { ApiError } from "../utility/ApiError.js";
+import { verifyJWT, isAdmin, optionalAuth } from "../middleware/auth.middleware.js";
+import { ApiError } from "../utility/ApiError.utility.js";
 
 // Custom role-based authorization middleware
 const authorizeRoles = (...allowedRoles) => {

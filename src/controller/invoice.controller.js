@@ -3,12 +3,12 @@ import { createTransport } from "nodemailer";
 import fs from "fs";
 import path from "path";
 import "dotenv/config";
-import { ApiError } from "../utility/ApiError.js";
-import { ApiResponse } from "../utility/ApiResponse.js";
-import { asyncHandler } from "../utility/AsyncHandler.js";
-import Order from "../Model/order.js";
-import Invoice from "../Model/invoice.js";
-import User from "../Model/user.js";
+import { ApiError } from "../utility/ApiError.utility.js";
+import { ApiResponse } from "../utility/ApiResponse.utility.js";
+import { asyncHandler } from "../utility/AsyncHandler.utility.js";
+import Order from "../Model/order.model.js";
+import Invoice from "../Model/invoice.model.js";
+import User from "../Model/user.model.js";
 
 // ================= CONFIGURATION =================
 const CONFIG = Object.freeze({

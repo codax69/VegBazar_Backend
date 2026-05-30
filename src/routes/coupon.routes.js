@@ -7,9 +7,9 @@ import {
   getCouponById,
   updateCoupon,
   deleteCoupon,
-} from "../controller/coupon.js";
+} from "../controller/coupon.controller.js";
 
-import { verifyJWT, isAdmin } from "../middleware/auth.js";
+import { verifyJWT, isAdmin } from "../middleware/auth.middleware.js";
 
 const router = Router();
 

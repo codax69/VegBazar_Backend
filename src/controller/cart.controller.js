@@ -1,8 +1,8 @@
-import Cart from "../Model/cart.js";
-import Vegetable from "../Model/vegetable.js";
-import { asyncHandler } from "../utility/AsyncHandler.js";
-import { ApiResponse } from "../utility/ApiResponse.js";
-import { ApiError } from "../utility/ApiError.js";
+import Cart from "../Model/cart.model.js";
+import Vegetable from "../Model/vegetable.model.js";
+import { asyncHandler } from "../utility/AsyncHandler.utility.js";
+import { ApiResponse } from "../utility/ApiResponse.utility.js";
+import { ApiError } from "../utility/ApiError.utility.js";
 
 // ─── LRU Cache ────────────────────────────────────────────────────────────────
 class CartLRUCache {

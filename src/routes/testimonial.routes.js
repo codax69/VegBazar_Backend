@@ -7,9 +7,9 @@ import {
   updateTestimonial,
   deleteTestimonial,
   getTestimonialStats,
-} from "../controller/testimonial.js";
+} from "../controller/testimonial.controller.js";
 
-import { verifyJWT, isAdmin } from "../middleware/auth.js";
+import { verifyJWT, isAdmin } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 

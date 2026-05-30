@@ -8,9 +8,9 @@ import {
   getTop3Baskets,
   incrementBasketClick,
   getAllBasketsByClicks,
-} from "../controller/basket.js";
+} from "../controller/basket.controller.js";
 
-import { verifyJWT, isAdmin } from "../middleware/auth.js";
+import { verifyJWT, isAdmin } from "../middleware/auth.middleware.js";
 
 const router = Router();
 

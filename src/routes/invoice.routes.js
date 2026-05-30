@@ -5,12 +5,12 @@ import {
   bulkProcessInvoices,
   getInvoiceAnalytics,
   retryFailedEmails,
-} from "../controller/invoice.js";
+} from "../controller/invoice.controller.js";
 
 import {
   verifyJWT,
   isAdmin,
-} from "../middleware/auth.js";
+} from "../middleware/auth.middleware.js";
 
 // Custom role-based authorization middleware
 const authorizeRoles = (...allowedRoles) => {

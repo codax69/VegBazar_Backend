@@ -1,7 +1,7 @@
-import Basket from "../Model/basket.js";
-import Order from "../Model/order.js";
-import { ApiResponse } from "../utility/ApiResponse.js";
-import { asyncHandler } from "../utility/AsyncHandler.js";
+import Basket from "../Model/basket.model.js";
+import Order from "../Model/order.model.js";
+import { ApiResponse } from "../utility/ApiResponse.utility.js";
+import { asyncHandler } from "../utility/AsyncHandler.utility.js";
 
 // Helper function to calculate value score (quality to price ratio)
 const calculateValueScore = (basket) => {

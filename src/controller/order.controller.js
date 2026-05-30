@@ -1,14 +1,14 @@
-import Order from "../Model/order.js";
-import User from "../Model/user.js";
-import Vegetable from "../Model/vegetable.js";
-import Basket from "../Model/basket.js";
-import Coupon from "../Model/coupon.js";
-import Address from "../Model/address.js";
-import { ApiResponse } from "../utility/ApiResponse.js";
-import { asyncHandler } from "../utility/AsyncHandler.js";
-import { ApiError } from "../utility/ApiError.js";
-import { incrementCouponUsage } from "./coupon.js";
-import { processOrderInvoice, sendInvoiceEmail } from "./invoice.js";
+import Order from "../Model/order.model.js";
+import User from "../Model/user.model.js";
+import Vegetable from "../Model/vegetable.model.js";
+import Basket from "../Model/basket.model.js";
+import Coupon from "../Model/coupon.model.js";
+import Address from "../Model/address.model.js";
+import { ApiResponse } from "../utility/ApiResponse.utility.js";
+import { asyncHandler } from "../utility/AsyncHandler.utility.js";
+import { ApiError } from "../utility/ApiError.utility.js";
+import { incrementCouponUsage } from "./coupon.controller.js";
+import { processOrderInvoice, sendInvoiceEmail } from "./invoice.controller.js";
 import Razorpay from "razorpay";
 import crypto from "crypto";
 import nodemailer from "nodemailer";
@@ -16,7 +16,7 @@ import "dotenv/config";
 import { DELIVERY_CHARGES } from "../../const.js";
 import Wallet from "../Model/wallet.model.js";
 import WalletTransaction from "../Model/walletTransaction.model.js";
-import { rupeeToPaise, generateReferenceId } from "../utility/walletHelpers.js";
+import { rupeeToPaise, generateReferenceId } from "../utility/walletHelpers.utility.js";
 import mongoose from "mongoose";
 import {
   calculateCashback,
@@ -100,10 +100,28 @@ const CONFIG = Object.freeze({
 // ─────────────────────────────────────────────────────────────────────────────
 // RAZORPAY SINGLETON
 // ─────────────────────────────────────────────────────────────────────────────
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_SECRET,
-});
+const razorpay = process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_SECRET
+  ? new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID,
+      key_secret: process.env.RAZORPAY_SECRET,
+    })
+  : null;
+
+if (!razorpay) {
+  console.warn(
+    "[order] Razorpay is not configured. Set RAZORPAY_KEY_ID and RAZORPAY_SECRET to enable online payments."
+  );
+}
+
+const ensureRazorpayConfigured = () => {
+  if (!razorpay) {
+    throw new ApiError(
+      500,
+      "Razorpay is not configured. Set RAZORPAY_KEY_ID and RAZORPAY_SECRET in your environment."
+    );
+  }
+  return razorpay;
+};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // INPUT SANITIZATION
@@ -290,7 +308,7 @@ try {
   Counter = mongoose.model("Counter");
 } catch {
   try {
-    const { default: C } = await import("../Model/counter.js");
+    const { default: C } = await import("../Model/counter.model.js");
     Counter = C;
   } catch {
     Counter = null;
@@ -1317,7 +1335,7 @@ export const addOrder = asyncHandler(async (req, res) => {
 
   // ── ONLINE (Razorpay) ─────────────────────────────────────────────────────
   const orderId = await generateUniqueOrderId();
-  const razorpayOrder = await razorpay.orders.create({
+  const razorpayOrder = await ensureRazorpayConfigured().orders.create({
     amount: Math.round(finalPayableAmount * 100),
     currency: "INR",
     receipt: orderId,
@@ -1459,14 +1477,14 @@ export const verifyPayment = asyncHandler(async (req, res) => {
   let finalPayableAmount = totals.totalAmount;
 
   try {
-    const rzpOrder = await razorpay.orders.fetch(razorpay_order_id);
+    const rzpOrder = await ensureRazorpayConfigured().orders.fetch(razorpay_order_id);
     const lockedCredit = parseFloat(rzpOrder.notes?.walletCreditUsed || "0");
     if (!isNaN(lockedCredit) && lockedCredit > 0) {
       walletCreditUsed = lockedCredit;
       finalPayableAmount = Math.max(0, totals.totalAmount - walletCreditUsed);
     }
-  } catch {
-    console.error("[verifyPayment] Could not fetch Razorpay notes — proceeding without wallet credit");
+  } catch (err) {
+    console.error("[verifyPayment] Could not fetch Razorpay notes — proceeding without wallet credit", err.message);
   }
 
   const session = await mongoose.startSession();
@@ -1599,6 +1617,10 @@ export const updateOrderStatus = asyncHandler(async (req, res) => {
     .lean();
 
   if (order?.customerInfo?.email) {
+    const statusNote = sanitizedStatus === "cancelled"
+      ? "This is only a dummy order. It has not been placed or delivered to your home because the site services are currently closed."
+      : "Thank you for shopping with VegBazar! Your order will be updated as delivery progresses. ";
+
     sendInvoiceEmail(order, null, {
       customSubject: `Order Status Update - #${order.orderId}`,
       customMessage: `
@@ -1609,7 +1631,7 @@ export const updateOrderStatus = asyncHandler(async (req, res) => {
             <p>Dear ${order.customerInfo.name || "Customer"},</p>
             <p>Your order <strong>#${order.orderId}</strong> status has been updated to:</p>
             <h3 style="color:#e57512;text-transform:uppercase;margin:20px 0;">${sanitizedStatus}</h3>
-            <p>Thank you for shopping with VegBazar!</p>
+            <p>${statusNote}</p>
           </div>
           <div style="background:#0e540b;color:white;padding:15px;text-align:center;font-size:12px;">
             <p>Need help? Contact us at info.vegbazar@gmail.com</p>

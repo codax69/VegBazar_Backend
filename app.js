@@ -6,7 +6,7 @@ import {
   generalLimiter,
   sensitiveLimiter,
   majorLimiter,
-} from "./src/middleware/rateLimiter.js";
+} from "./src/middleware/rateLimiter.middleware.js";
 
 const allowedOrigins = [
   "https://admin.vegbazar.cloud",
@@ -46,7 +46,7 @@ app.use((req, res, next) => {
 
 
 // Public / utility routes
-import otpRoutes from "./src/routes/otp.js";
+import otpRoutes from "./src/routes/otp.routes.js";
 
 app.use("/api/otp", sensitiveLimiter, otpRoutes);
 
@@ -60,20 +60,20 @@ app.get("/health", (req, res) => {
 });
 
 // Application routes
-import vegetableRoutes from "./src/routes/vegetable.js";
-import orderRoutes from "./src/routes/order.js";
-import authRoutes from "./src/routes/auth.js";
-import cityRoutes from "./src/routes/City.js";
-import invoiceRoutes from "./src/routes/invoice.js";
-import testimonialRoutes from "./src/routes/testimonial.js";
-import couponRoutes from "./src/routes/coupon.js";
-import userRoutes from "./src/routes/user.js";
-import addressRoutes from "./src/routes/address.js";
-import cartRoutes from "./src/routes/cart.js";
-import orderReportsRoutes from "./src/routes/OrderReport.route.js";
-import exportRoutes from "./src/routes/export.route.js";
+import vegetableRoutes from "./src/routes/vegetable.routes.js";
+import orderRoutes from "./src/routes/order.routes.js";
+import authRoutes from "./src/routes/auth.routes.js";
+import cityRoutes from "./src/routes/City.routes.js";
+import invoiceRoutes from "./src/routes/invoice.routes.js";
+import testimonialRoutes from "./src/routes/testimonial.routes.js";
+import couponRoutes from "./src/routes/coupon.routes.js";
+import userRoutes from "./src/routes/user.routes.js";
+import addressRoutes from "./src/routes/address.routes.js";
+import cartRoutes from "./src/routes/cart.routes.js";
+import orderReportsRoutes from "./src/routes/OrderReport.routes.js";
+import exportRoutes from "./src/routes/export.routes.js";
 import reportRoutes from "./src/routes/report.routes.js";
-import basketRoutes from "./src/routes/basket.js";
+import basketRoutes from "./src/routes/basket.routes.js";
 import walletRoutes from "./src/routes/wallet.routes.js";
 
 

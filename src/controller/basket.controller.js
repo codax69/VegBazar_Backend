@@ -1,7 +1,7 @@
-import Basket from "../Model/basket.js";
-import { ApiResponse } from "../utility/ApiResponse.js";
-import { asyncHandler } from "../utility/AsyncHandler.js";
-import { ApiError } from "../utility/ApiError.js";
+import Basket from "../Model/basket.model.js";
+import { ApiResponse } from "../utility/ApiResponse.utility.js";
+import { asyncHandler } from "../utility/AsyncHandler.utility.js";
+import { ApiError } from "../utility/ApiError.utility.js";
 import mongoose from "mongoose";
 
 // Validation helper

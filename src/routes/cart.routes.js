@@ -10,8 +10,8 @@ import {
   getCartRecommendations,
   getCartAnalytics,
   mergeGuestCart, // ← was missing
-} from "../controller/cart.js";
-import { verifyJWT } from "../middleware/auth.js"; 
+} from "../controller/cart.controller.js";
+import { verifyJWT } from "../middleware/auth.middleware.js"; 
 const router = express.Router();
 
 // All cart routes require authentication

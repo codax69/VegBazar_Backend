@@ -1,14 +1,14 @@
 import Wallet from "../Model/wallet.model.js";
 import WalletTransaction from "../Model/walletTransaction.model.js";
-import { asyncHandler } from "../utility/AsyncHandler.js";
-import { ApiResponse } from "../utility/ApiResponse.js";
-import { ApiError } from "../utility/ApiError.js";
+import { asyncHandler } from "../utility/AsyncHandler.utility.js";
+import { ApiResponse } from "../utility/ApiResponse.utility.js";
+import { ApiError } from "../utility/ApiError.utility.js";
 import {
   rupeeToPaise,
   paiseToRupee,
   formatTransaction,
   generateReferenceId,
-} from "../utility/walletHelpers.js";
+} from "../utility/walletHelpers.utility.js";
 import mongoose from "mongoose";
 
 /**

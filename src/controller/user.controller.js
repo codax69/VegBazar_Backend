@@ -1,9 +1,9 @@
-import User from "../Model/user.js";
-import Order from "../Model/order.js";
-import Address from "../Model/address.js";
-import { asyncHandler } from "../utility/AsyncHandler.js";
-import { ApiResponse } from "../utility/ApiResponse.js";
-import { ApiError } from "../utility/ApiError.js";
+import User from "../Model/user.model.js";
+import Order from "../Model/order.model.js";
+import Address from "../Model/address.model.js";
+import { asyncHandler } from "../utility/AsyncHandler.utility.js";
+import { ApiResponse } from "../utility/ApiResponse.utility.js";
+import { ApiError } from "../utility/ApiError.utility.js";
 
 const ORDER_STATUS_PRIORITY = new Map([
   ["placed", 1],

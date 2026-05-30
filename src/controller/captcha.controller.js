@@ -1,7 +1,7 @@
-import {asyncHandler} from "../utility/AsyncHandler.js";
+import {asyncHandler} from "../utility/AsyncHandler.utility.js";
 import fetch from "node-fetch";
-import { ApiResponse } from "../utility/ApiResponse.js";
-import { ApiError } from "../utility/ApiError.js"
+import { ApiResponse } from "../utility/ApiResponse.utility.js";
+import { ApiError } from "../utility/ApiError.utility.js"
 
 export const verifyCaptcha = asyncHandler(async (req, res, next) => {
   const { token, action } = req.body;
