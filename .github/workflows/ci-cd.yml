@@ -97,6 +97,18 @@ jobs:
               docker stop vegbazar-backend 2>/dev/null || true
               docker rm vegbazar-backend 2>/dev/null || true
 
+              # Stop native host PM2 if previously running on VPS
+              if command -v pm2 >/dev/null 2>&1; then
+                pm2 stop vegbazar-backend 2>/dev/null || true
+                pm2 delete vegbazar-backend 2>/dev/null || true
+                pm2 save 2>/dev/null || true
+              fi
+
+              # Release port 4000 if still held by another process
+              if command -v fuser >/dev/null 2>&1; then
+                fuser -k 4000/tcp 2>/dev/null || true
+              fi
+
               # Ensure .env file exists on VPS
               if [ ! -f .env ]; then
                 echo "WARNING: .env not found in $TARGET. Creating default placeholder .env file."
