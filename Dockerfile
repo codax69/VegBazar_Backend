@@ -13,8 +13,8 @@ RUN npm install -g pm2
 COPY . .
 
 ENV NODE_ENV=production
-ENV PORT=4000
-EXPOSE 4000
+ENV PORT=4041
+EXPOSE 4041
 
 # Run with PM2 runtime for container process management & monitoring
 CMD ["pm2-runtime", "start", "ecosystem.config.cjs"]
