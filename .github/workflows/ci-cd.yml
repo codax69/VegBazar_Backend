@@ -38,6 +38,9 @@ jobs:
       - name: Run test suite
         run: npm test
 
+      - name: Build Docker Image (Verify build & PM2 packaging)
+        run: docker build -t vegbazar-backend:ci .
+
   # ─────────────────────────────────────────────────────────────
   # JOB 2 — Deploy to Production VPS
   # ─────────────────────────────────────────────────────────────
@@ -81,28 +84,35 @@ jobs:
             -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" \
             ./ "$USER@$HOST:$TARGET"
 
-          # Restart service on VPS (Docker or PM2)
+          # Build and run with PM2 / Docker on VPS
           ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$USER@$HOST" bash -s << EOF
             set -e
             cd "$TARGET"
 
             if command -v docker >/dev/null 2>&1 && [ -f Dockerfile ]; then
-              echo "Deploying backend via Docker..."
+              echo "=== Stage 1: Build Docker Image on Server ==="
               docker build -t vegbazar-backend:latest .
+
+              echo "=== Stage 2: Run Docker Image with PM2 Container ==="
               docker stop vegbazar-backend 2>/dev/null || true
               docker rm vegbazar-backend 2>/dev/null || true
               docker run -d --name vegbazar-backend --restart unless-stopped \
                 --env-file .env \
                 -p 4000:4000 \
-                vegbazar-backend:latest || true
+                vegbazar-backend:latest
+
               docker image prune -f
+              echo "=== Docker Container Status ==="
+              docker ps --filter "name=vegbazar-backend"
             elif command -v pm2 >/dev/null 2>&1; then
-              echo "Deploying backend via PM2..."
+              echo "=== Stage: Deploy via Native PM2 ==="
               npm ci --omit=dev --prefer-offline
               pm2 startOrReload ecosystem.config.cjs --update-env || pm2 restart vegbazar-backend || pm2 start ecosystem.config.cjs
               pm2 save
+              echo "=== PM2 Process Status ==="
+              pm2 list
             else
-              echo "Deploying via npm..."
+              echo "=== Fallback: Run via npm ==="
               npm ci --omit=dev --prefer-offline
             fi
           EOF
