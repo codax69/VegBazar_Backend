@@ -96,6 +96,13 @@ jobs:
               echo "=== Stage 2: Run Docker Image with PM2 Container ==="
               docker stop vegbazar-backend 2>/dev/null || true
               docker rm vegbazar-backend 2>/dev/null || true
+
+              # Ensure .env file exists on VPS
+              if [ ! -f .env ]; then
+                echo "WARNING: .env not found in $TARGET. Creating default placeholder .env file."
+                touch .env
+              fi
+
               docker run -d --name vegbazar-backend --restart unless-stopped \
                 --env-file .env \
                 -p 4000:4000 \
