@@ -2,6 +2,7 @@ import "dotenv/config";
 import express, { json, urlencoded } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import compression from "compression";
 import {
   generalLimiter,
   sensitiveLimiter,
@@ -15,10 +16,12 @@ const allowedOrigins = [
 ];
 
 const app = express();
+app.disable("x-powered-by");
 
 /* ================= CORE MIDDLEWARE ================= */
-app.use(json({ limit: "50mb" }));
-app.use(urlencoded({ limit: "50mb", extended: true }));
+app.use(compression());
+app.use(json({ limit: "2mb" }));
+app.use(urlencoded({ limit: "2mb", extended: true }));
 app.use(cookieParser());
 app.use(express.static("public"));
 
@@ -75,24 +78,24 @@ import exportRoutes from "./src/routes/export.routes.js";
 import reportRoutes from "./src/routes/report.routes.js";
 import basketRoutes from "./src/routes/basket.routes.js";
 import walletRoutes from "./src/routes/wallet.routes.js";
-
+import aiRoutes from "./src/routes/ai.routes.js";
 
 // Sensitive
-app.use("/api/otp", otpRoutes);
 app.use("/api/auth", authRoutes);
 
 app.use("/api/vegetables", vegetableRoutes);
 app.use("/api/orders", orderRoutes);
-app.use("/api/cart",  cartRoutes);
+app.use("/api/cart", cartRoutes);
 app.use("/api/wallet", walletRoutes);
 app.use("/api/coupons", couponRoutes);
+app.use("/api/ai", aiRoutes);
 
 // Normal (read-heavy / low-risk)
 app.use("/api/cities", cityRoutes);
 app.use("/api/testimonials", testimonialRoutes);
 app.use("/api/invoice", invoiceRoutes);
 app.use("/api/user", userRoutes);
-app.use("/api/addresses", addressRoutes); 
+app.use("/api/addresses", addressRoutes);
 app.use("/api/reports", orderReportsRoutes);
 app.use("/api/report", reportRoutes);
 app.use("/api/export", exportRoutes);

@@ -6,16 +6,38 @@ import dns from "node:dns";
 dns.setServers(["8.8.8.8", "8.8.4.4"]);
 dns.setDefaultResultOrder("ipv4first");
 
+const ensureMongoUri = (uri) => {
+  if (!uri || typeof uri !== "string" || !uri.trim()) {
+    throw new Error(
+      'Missing DB_URI. Set DB_URI in your environment to a valid connection string starting with "mongodb://" or "mongodb+srv://".',
+    );
+  }
+
+  const trimmed = uri.trim();
+  if (!/^mongodb(?:\+srv)?:\/\//.test(trimmed)) {
+    throw new Error(
+      `Invalid DB_URI scheme. Expected connection string to start with "mongodb://" or "mongodb+srv://". Received: ${trimmed}`,
+    );
+  }
+
+  return trimmed;
+};
+
 export const ConnectDB = async () => {
   try {
-    const connectionDB = await mongoose.connect(
-      `${process.env.DB_URI}/${"VegBazarDB"}`,
-      { family: 4 },
-    );
+
+    const connectionDB = await mongoose.connect(process.env.DB_URI, {
+      dbName: process.env.DB_NAME,
+      maxPoolSize: 10,
+      minPoolSize: 2,
+      autoIndex: process.env.NODE_ENV !== "production",
+      serverSelectionTimeoutMS: 5000,
+    });
     console.log("DB HOSTED ON:", connectionDB.connection.host);
+    console.log("DB NAME CONNECTED:", connectionDB.connection.name);
 
     // Remove stale MongoDB $jsonSchema validators from collections
-    // that conflict with current Mongoose schema definitions
+    // that conflict with current Mongoose schema definitions.
     try {
       const db = connectionDB.connection.db;
       await db.command({
@@ -25,7 +47,6 @@ export const ConnectDB = async () => {
       });
       console.log("✅ Removed stale validator from 'orders' collection");
     } catch (validatorErr) {
-      // Collection may not exist yet or no validator to remove — safe to ignore
       if (validatorErr.codeName !== "NamespaceNotFound") {
         console.warn(
           "⚠️ Could not remove orders validator:",
@@ -43,7 +64,7 @@ export const ConnectDB = async () => {
       );
       console.error("🔗 Whitelist your IP here: https://cloud.mongodb.com/\n");
     } else {
-      console.log("DataBase Connection ERROR:", error);
+      console.log("DataBase Connection ERROR:", error.message || error);
     }
     process.exit(1);
   }
