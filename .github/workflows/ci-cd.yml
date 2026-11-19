@@ -1,4 +1,4 @@
-name: Backend CI / CD Pipeline
+name: Backend CI/CD
 
 on:
   push:
@@ -8,130 +8,78 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  group: vegbazar-backend-${{ github.ref }}
+  cancel-in-progress: false
 
-env:
-  NODE_VERSION: "20"
+permissions:
+  contents: read
 
 jobs:
-  # ─────────────────────────────────────────────────────────────
-  # JOB 1 — Test & Verify
-  # ─────────────────────────────────────────────────────────────
   ci:
-    name: Test & Verify
+    name: Test and verify image
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js ${{ env.NODE_VERSION }}
+      - uses: actions/checkout@v4
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version: "22"
           cache: npm
+      - run: npm ci
+      - run: npm test
+      - name: Verify production Docker image
+        run: docker build --tag vegbazar-backend:ci .
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run test suite
-        run: npm test
-
-      - name: Build Docker Image (Verify build & PM2 packaging)
-        run: docker build -t vegbazar-backend:ci .
-
-  # ─────────────────────────────────────────────────────────────
-  # JOB 2 — Deploy to Production VPS
-  # ─────────────────────────────────────────────────────────────
-  deploy:
-    name: Deploy to Production VPS
+  publish-and-deploy:
+    name: Publish and deploy backend
     runs-on: ubuntu-latest
     needs: ci
-    if: github.event_name == 'workflow_dispatch' || (github.ref == 'refs/heads/main' && github.event_name == 'push')
-
-    environment:
-      name: production
-
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    permissions:
+      contents: read
+      packages: write
+    concurrency:
+      group: vegbazar-production-deploy
+      cancel-in-progress: false
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup SSH key
-        uses: webfactory/ssh-agent@v0.9.0
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
         with:
-          ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
-
-      - name: Deploy Backend to VPS
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/codax69/vegbazar-backend:${{ github.sha }}
+            ghcr.io/codax69/vegbazar-backend:latest
+      - name: Deploy exact image tag to VPS
         env:
-          RAW_HOST: ${{ secrets.VPS_HOST }}
-          RAW_USER: ${{ secrets.VPS_USERNAME }}
-          RAW_TARGET: ${{ secrets.VPS_BACKEND_TARGET_DIR || secrets.VPS_TARGET_DIR }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
         run: |
-          HOST=$(echo "$RAW_HOST" | tr -d '\r\n\t ' | sed -e 's|^https://||' -e 's|^http://||' -e 's|/*$||')
-          USER=$(echo "$RAW_USER" | tr -d '\r\n\t ')
-          TARGET=$(echo "$RAW_TARGET" | tr -d '\r\n\t ')
-
-          echo "Deploying backend to $USER@$HOST:$TARGET ..."
-
-          # Sync backend files to VPS (preserve server .env)
-          rsync -avz --delete \
-            --exclude '.git' \
-            --exclude 'node_modules' \
-            --exclude 'tests' \
-            --exclude 'temp' \
-            --exclude '.env' \
-            -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" \
-            ./ "$USER@$HOST:$TARGET"
-
-          # Build and run with PM2 / Docker on VPS
-          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$USER@$HOST" bash -s << EOF
-            set -e
-            cd "$TARGET"
-
-            if command -v docker >/dev/null 2>&1 && [ -f Dockerfile ]; then
-              echo "=== Stage 1: Build Docker Image on Server ==="
-              docker build -t vegbazar-backend:latest .
-
-              echo "=== Stage 2: Run Docker Image with PM2 Container ==="
-              docker stop vegbazar-backend 2>/dev/null || true
-              docker rm vegbazar-backend 2>/dev/null || true
-
-              # Stop native host PM2 if previously running on VPS
-              if command -v pm2 >/dev/null 2>&1; then
-                pm2 stop vegbazar-backend 2>/dev/null || true
-                pm2 delete vegbazar-backend 2>/dev/null || true
-                pm2 save 2>/dev/null || true
-              fi
-
-              # Release port 4000 if still held by another process
-              if command -v fuser >/dev/null 2>&1; then
-                fuser -k 4000/tcp 2>/dev/null || true
-              fi
-
-              # Ensure .env file exists on VPS
-              if [ ! -f .env ]; then
-                echo "WARNING: .env not found in $TARGET. Creating default placeholder .env file."
-                touch .env
-              fi
-
-              docker run -d --name vegbazar-backend --restart unless-stopped \
-                --env-file .env \
-                -p 4041:4041 \
-                vegbazar-backend:latest
-
-              docker image prune -f
-              echo "=== Docker Container Status ==="
-              docker ps --filter "name=vegbazar-backend"
-            elif command -v pm2 >/dev/null 2>&1; then
-              echo "=== Stage: Deploy via Native PM2 ==="
-              npm ci --omit=dev --prefer-offline
-              pm2 startOrReload ecosystem.config.cjs --update-env || pm2 restart vegbazar-backend || pm2 start ecosystem.config.cjs
-              pm2 save
-              echo "=== PM2 Process Status ==="
-              pm2 list
-            else
-              echo "=== Fallback: Run via npm ==="
-              npm ci --omit=dev --prefer-offline
-            fi
-          EOF
+          set -euo pipefail
+          install -m 700 -d "$HOME/.ssh"
+          key_file="$HOME/.ssh/vegbazar_deploy"
+          printf '%s\n' "$VPS_SSH_KEY" > "$key_file"
+          chmod 600 "$key_file"
+          trap 'rm -f "$key_file"' EXIT
+          if [ -n "$VPS_KNOWN_HOSTS" ]; then
+            printf '%s\n' "$VPS_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          else
+            ssh-keyscan -H -T 10 "$VPS_HOST" >> "$HOME/.ssh/known_hosts"
+          fi
+          chmod 600 "$HOME/.ssh/known_hosts"
+          ssh -i "$key_file" \
+            -o IdentitiesOnly=yes \
+            -o BatchMode=yes \
+            -o StrictHostKeyChecking=yes \
+            "$VPS_USER@$VPS_HOST" \
+            "bash /opt/apps/vegbazar/deploy.sh deploy backend $GITHUB_SHA"
