@@ -61,11 +61,23 @@ jobs:
       - name: Deploy exact image tag to VPS
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
-          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_USER: ${{ secrets.VPS_USER || secrets.VPS_USERNAME }}
           VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
           VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
         run: |
           set -euo pipefail
+          if [[ -z "${VPS_HOST:-}" || ! "${VPS_HOST:-}" =~ [^[:space:]] ]]; then
+            echo "::error::VPS_HOST is missing. Add the VPS hostname or IP as a repository secret."
+            exit 1
+          fi
+          if [[ -z "${VPS_USER:-}" || ! "${VPS_USER:-}" =~ [^[:space:]] ]]; then
+            echo "::error::VPS_USER is missing. Add the SSH username as a repository secret (VPS_USERNAME is also accepted for migration)."
+            exit 1
+          fi
+          if [[ -z "${VPS_SSH_KEY:-}" || ! "${VPS_SSH_KEY:-}" =~ [^[:space:]] ]]; then
+            echo "::error::VPS_SSH_KEY is missing. Add the SSH private key as a repository secret."
+            exit 1
+          fi
           install -m 700 -d "$HOME/.ssh"
           key_file="$HOME/.ssh/vegbazar_deploy"
           printf '%s\n' "$VPS_SSH_KEY" > "$key_file"
