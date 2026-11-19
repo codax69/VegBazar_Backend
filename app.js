@@ -12,8 +12,12 @@ import {
 const allowedOrigins = [
   "https://admin.vegbazar.cloud",
   "https://vegbazar.store",
+  "https://vegbazar.pritesh.site",
+  "https://api.vegbazar.pritesh.site",
   "http://localhost:5173",
-];
+  ...(process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(",") : []),
+  ...(process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(",") : []),
+].filter(Boolean);
 
 const app = express();
 app.disable("x-powered-by");
