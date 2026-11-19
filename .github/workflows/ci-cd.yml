@@ -58,6 +58,17 @@ jobs:
           tags: |
             ghcr.io/codax69/vegbazar-backend:${{ github.sha }}
             ghcr.io/codax69/vegbazar-backend:latest
+      - name: Check out VPS deployment files
+        uses: actions/checkout@v4
+        with:
+          repository: codax69/VegBazar
+          ref: main
+          token: ${{ secrets.DEPLOYMENT_REPO_TOKEN || github.token }}
+          path: deployment-assets
+          sparse-checkout: |
+            docker-compose.yml
+            deploy.sh
+          persist-credentials: false
       - name: Deploy exact image tag to VPS
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
@@ -78,6 +89,12 @@ jobs:
             echo "::error::VPS_SSH_KEY is missing. Add the SSH private key as a repository secret."
             exit 1
           fi
+          for file in deployment-assets/docker-compose.yml deployment-assets/deploy.sh; do
+            if [ ! -s "$file" ]; then
+              echo "::error::Required VPS deployment file is missing from the frontend repository checkout: $file"
+              exit 1
+            fi
+          done
           install -m 700 -d "$HOME/.ssh"
           key_file="$HOME/.ssh/vegbazar_deploy"
           printf '%s\n' "$VPS_SSH_KEY" > "$key_file"
@@ -89,9 +106,16 @@ jobs:
             ssh-keyscan -H -T 10 "$VPS_HOST" >> "$HOME/.ssh/known_hosts"
           fi
           chmod 600 "$HOME/.ssh/known_hosts"
-          ssh -i "$key_file" \
-            -o IdentitiesOnly=yes \
-            -o BatchMode=yes \
-            -o StrictHostKeyChecking=yes \
-            "$VPS_USER@$VPS_HOST" \
-            "bash /opt/apps/vegbazar/deploy.sh deploy backend $GITHUB_SHA"
+          ssh_options=(
+            -i "$key_file"
+            -o IdentitiesOnly=yes
+            -o BatchMode=yes
+            -o StrictHostKeyChecking=yes
+          )
+          destination="$VPS_USER@$VPS_HOST"
+          ssh "${ssh_options[@]}" "$destination" \
+            "test -d /opt/apps/vegbazar || { echo 'Missing /opt/apps/vegbazar; run the documented VPS setup first.' >&2; exit 1; }; test -w /opt/apps/vegbazar || { echo 'The SSH user cannot write /opt/apps/vegbazar.' >&2; exit 1; }"
+          scp "${ssh_options[@]}" deployment-assets/docker-compose.yml deployment-assets/deploy.sh \
+            "$destination:/opt/apps/vegbazar/"
+          ssh "${ssh_options[@]}" "$destination" \
+            "chmod 750 /opt/apps/vegbazar/deploy.sh && bash /opt/apps/vegbazar/deploy.sh deploy backend $GITHUB_SHA"
