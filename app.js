@@ -15,6 +15,10 @@ const allowedOrigins = [
   "https://vegbazar.pritesh.site",
   "https://api.vegbazar.pritesh.site",
   "http://localhost:5173",
+  "http://localhost:8042",
+  "http://127.0.0.1:8042",
+  "http://localhost:8001",
+  "http://127.0.0.1:8001",
   ...(process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(",") : []),
   ...(process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(",") : []),
 ].filter(Boolean);
