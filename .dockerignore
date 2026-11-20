@@ -16,3 +16,9 @@ Dockerfile*
 .dockerignore
 .gitignore
 .DS_Store
+docker-compose.yml
+deploy.sh
+deploy
+release.env
+.previous-release.env
+.deploy.lock

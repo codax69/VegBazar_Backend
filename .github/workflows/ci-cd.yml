@@ -62,18 +62,6 @@ jobs:
             ghcr.io/codax69/vegbazar-backend:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
-      - name: Check out VPS deployment files
-        uses: actions/checkout@v4
-        with:
-          repository: codax69/VegBazar
-          ref: main
-          token: ${{ secrets.DEPLOYMENT_REPO_TOKEN || github.token }}
-          path: deployment-assets
-          sparse-checkout: |
-            docker-compose.yml
-            deploy.sh
-          sparse-checkout-cone-mode: false
-          persist-credentials: false
       - name: Deploy exact image tag to VPS
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
@@ -95,9 +83,9 @@ jobs:
             echo "::error::VPS_SSH_KEY is missing. Add the SSH private key as a repository secret."
             exit 1
           fi
-          for file in deployment-assets/docker-compose.yml deployment-assets/deploy.sh; do
+          for file in docker-compose.yml deploy.sh; do
             if [ ! -s "$file" ]; then
-              echo "::error::Required VPS deployment file is missing from the frontend repository checkout: $file"
+              echo "::error::Required VPS deployment file is missing: $file"
               exit 1
             fi
           done
@@ -119,6 +107,7 @@ jobs:
           ssh_options=(
             -i "$key_file"
             -p "${VPS_PORT:-22}"
+            -o LogLevel=ERROR
             -o IdentitiesOnly=yes
             -o BatchMode=yes
             -o StrictHostKeyChecking=yes
@@ -126,14 +115,15 @@ jobs:
           scp_options=(
             -i "$key_file"
             -P "${VPS_PORT:-22}"
+            -o LogLevel=ERROR
             -o IdentitiesOnly=yes
             -o BatchMode=yes
             -o StrictHostKeyChecking=yes
           )
           destination="$VPS_USER@$VPS_HOST"
           ssh "${ssh_options[@]}" "$destination" \
-            "test -d /opt/apps/vegbazar || { echo 'Missing /opt/apps/vegbazar; run the documented VPS setup first.' >&2; exit 1; }; test -w /opt/apps/vegbazar || { echo 'The SSH user cannot write /opt/apps/vegbazar.' >&2; exit 1; }"
-          scp "${scp_options[@]}" deployment-assets/docker-compose.yml deployment-assets/deploy.sh \
-            "$destination:/opt/apps/vegbazar/"
+            "mkdir -p /opt/apps/vegbazar/backend && test -f /opt/apps/vegbazar/backend/.env || { echo '::error::Missing /opt/apps/vegbazar/backend/.env on VPS. Create it with DB_URI and required production secrets before deploying.' >&2; exit 1; }"
+          scp "${scp_options[@]}" docker-compose.yml deploy.sh \
+            "$destination:/opt/apps/vegbazar/backend/"
           ssh "${ssh_options[@]}" "$destination" \
-            "chmod 750 /opt/apps/vegbazar/deploy.sh && bash /opt/apps/vegbazar/deploy.sh deploy backend $GITHUB_SHA"
+            "chmod 750 /opt/apps/vegbazar/backend/deploy.sh && bash /opt/apps/vegbazar/backend/deploy.sh deploy $GITHUB_SHA"
