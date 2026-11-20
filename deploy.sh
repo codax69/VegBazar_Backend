@@ -146,6 +146,11 @@ deploy_component() {
     ! compose up -d --wait --wait-timeout 90 "$SERVICE" ||
     ! wait_for_health; then
     echo "Deployment failed; restoring the previous $SERVICE image tag." >&2
+    if [[ "$old_tag" == "0000000000000000000000000000000000000000" ]]; then
+      echo "No previous release exists to restore (initial deployment failed)." >&2
+      rm -f "$backup"
+      return 1
+    fi
     if ! atomic_restore "$backup" "$RELEASE_FILE"; then
       echo "Could not restore release.env; recover it from $backup." >&2
       return 1
