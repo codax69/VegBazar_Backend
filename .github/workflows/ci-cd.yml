@@ -126,7 +126,16 @@ jobs:
           )
           destination="$VPS_USER@$VPS_HOST"
           ssh "${ssh_options[@]}" "$destination" \
-            "mkdir -p /opt/apps/vegbazar/backend && test -f /opt/apps/vegbazar/backend/.env || { echo '::error::Missing /opt/apps/vegbazar/backend/.env on VPS. Create it with DB_URI and required production secrets before deploying.' >&2; exit 1; }"
+            "mkdir -p /opt/apps/vegbazar/backend 2>/dev/null || true
+             if [ ! -w /opt/apps/vegbazar/backend ]; then
+               echo '::error::Permission denied: $VPS_USER cannot write to /opt/apps/vegbazar/backend. Fix on VPS by running: sudo chown -R $VPS_USER:$VPS_USER /opt/apps/vegbazar' >&2
+               exit 1
+             fi
+             rm -f /opt/apps/vegbazar/backend/docker-compose.yml /opt/apps/vegbazar/backend/deploy.sh 2>/dev/null || true
+             if [ ! -f /opt/apps/vegbazar/backend/.env ]; then
+               echo '::error::Missing /opt/apps/vegbazar/backend/.env on VPS. Create it with DB_URI and required production secrets before deploying.' >&2
+               exit 1
+             fi"
           scp "${scp_options[@]}" docker-compose.yml deploy.sh \
             "$destination:/opt/apps/vegbazar/backend/"
           ssh "${ssh_options[@]}" "$destination" \

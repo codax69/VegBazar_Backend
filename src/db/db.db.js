@@ -1,10 +1,15 @@
 import mongoose from "mongoose";
 import dns from "node:dns";
 
-// Force Node.js to use Google DNS and prefer IPv4
-// Fixes SRV lookup failures on restricted networks
-dns.setServers(["8.8.8.8", "8.8.4.4"]);
-dns.setDefaultResultOrder("ipv4first");
+// Prefer IPv4 for MongoDB SRV resolution
+try {
+  if (process.env.USE_GOOGLE_DNS === "true") {
+    dns.setServers(["8.8.8.8", "8.8.4.4"]);
+  }
+  dns.setDefaultResultOrder("ipv4first");
+} catch (_) {
+  // Use system default resolver if custom config fails
+}
 
 const ensureMongoUri = (uri) => {
   if (!uri || typeof uri !== "string" || !uri.trim()) {

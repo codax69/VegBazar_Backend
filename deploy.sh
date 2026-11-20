@@ -43,6 +43,8 @@ command -v curl >/dev/null
 command -v flock >/dev/null
 
 chmod 600 "$ENV_FILE"
+# Strip Windows CRLF and accidental whitespace around key names
+sed -i -e 's/\r$//' -e 's/^[[:space:]]*//' -e 's/^[[:space:]]*\([^#=[:space:]]*\)[[:space:]]*=[[:space:]]*/\1=/' "$ENV_FILE"
 exec 9>"$APP_DIR/.deploy.lock"
 flock -w 600 9 || {
   echo "Timed out waiting for the active VegBazar Backend deployment to finish." >&2
@@ -145,6 +147,8 @@ deploy_component() {
     ! compose pull "$SERVICE" ||
     ! compose up -d --wait --wait-timeout 90 "$SERVICE" ||
     ! wait_for_health; then
+    echo "=== Recent $SERVICE container logs ===" >&2
+    compose logs --tail 50 "$SERVICE" >&2 || true
     echo "Deployment failed; restoring the previous $SERVICE image tag." >&2
     if [[ "$old_tag" == "0000000000000000000000000000000000000000" ]]; then
       echo "No previous release exists to restore (initial deployment failed)." >&2
