@@ -43,8 +43,76 @@ command -v curl >/dev/null
 command -v flock >/dev/null
 
 chmod 600 "$ENV_FILE"
-# Strip Windows CRLF and accidental whitespace around key names
-sed -i -e 's/\r$//' -e 's/^[[:space:]]*//' -e 's/^[[:space:]]*\([^#=[:space:]]*\)[[:space:]]*=[[:space:]]*/\1=/' "$ENV_FILE"
+ENV_NORMALIZED="$(mktemp "${ENV_FILE}.XXXXXX")"
+trap 'rm -f "$ENV_NORMALIZED"' EXIT
+awk '
+function ltrim(s) { sub(/^[[:space:]]*/, "", s); return s }
+function rtrim(s) { sub(/[[:space:]]*$/, "", s); return s }
+function trim(s) { return rtrim(ltrim(s)) }
+function scan_quote(s,    i, c, escaped) {
+  escaped = 0
+  for (i = 1; i <= length(s); i++) {
+    c = substr(s, i, 1)
+    if (c == "\\" && quote == "\"" && !escaped) {
+      escaped = 1
+      continue
+    }
+    if (c == quote) {
+      quote = ""
+      escaped = 0
+      continue
+    }
+    escaped = 0
+  }
+  return quote
+}
+BEGIN { quote = "" }
+{
+  sub(/\r$/, "")
+  if (quote != "") {
+    print
+    quote = scan_quote($0)
+    next
+  }
+
+  line = $0
+  stripped = ltrim(line)
+  if (stripped == "" || substr(stripped, 1, 1) == "#") {
+    print line
+    next
+  }
+
+  eq = index(line, "=")
+  if (eq == 0) {
+    print line
+    next
+  }
+
+  left = trim(substr(line, 1, eq - 1))
+  right = substr(line, eq + 1)
+  if (left !~ /^[A-Za-z_][A-Za-z0-9_.-]*$/) {
+    print line
+    next
+  }
+
+  right = ltrim(right)
+  print left "=" right
+
+  if (right != "") {
+    first = substr(right, 1, 1)
+    if (first == "\"" || first == "\047") {
+      quote = first
+      quote = scan_quote(substr(right, 2))
+    }
+  }
+}
+END {
+  if (quote != "") exit 2
+}
+' "$ENV_FILE" > "$ENV_NORMALIZED"
+chmod 600 "$ENV_NORMALIZED"
+mv -f "$ENV_NORMALIZED" "$ENV_FILE"
+trap - EXIT
 exec 9>"$APP_DIR/.deploy.lock"
 flock -w 600 9 || {
   echo "Timed out waiting for the active VegBazar Backend deployment to finish." >&2
