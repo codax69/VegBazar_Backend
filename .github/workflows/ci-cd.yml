@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: vegbazar-backend-${{ github.ref }}
+  group: vegbazar-api-${{ github.ref }}
   cancel-in-progress: false
 
 permissions:
@@ -29,8 +29,8 @@ jobs:
       - run: npm test
       - name: Verify production Docker image
         run: |
-          docker build --tag vegbazar-backend:ci .
-          docker run --rm vegbazar-backend:ci node --check index.js
+          docker build --tag vegbazar-api:ci .
+          docker run --rm vegbazar-api:ci node --check index.js
 
   publish-and-deploy:
     name: Publish and deploy backend
@@ -41,7 +41,7 @@ jobs:
       contents: read
       packages: write
     concurrency:
-      group: vegbazar-backend-deploy
+      group: vegbazar-api-deploy
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
@@ -62,8 +62,8 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ghcr.io/codax69/vegbazar-backend:${{ github.sha }}
-            ghcr.io/codax69/vegbazar-backend:latest
+            ghcr.io/codax69/vegbazar-api:${{ github.sha }}
+            ghcr.io/codax69/vegbazar-api:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
       - name: Deploy exact image tag to VPS

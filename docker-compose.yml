@@ -1,7 +1,7 @@
 services:
   backend:
-    image: ghcr.io/${GHCR_OWNER:-codax69}/vegbazar-backend:${BACKEND_IMAGE_TAG:?Set BACKEND_IMAGE_TAG in release.env}
-    container_name: vegbazar-backend
+    image: ghcr.io/${GHCR_OWNER:-codax69}/vegbazar-api:${BACKEND_IMAGE_TAG:?Set BACKEND_IMAGE_TAG in release.env}
+    container_name: vegbazar-api
     restart: unless-stopped
     env_file:
       - .env

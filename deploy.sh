@@ -11,7 +11,7 @@ SERVICE="backend"
 TAG_KEY="BACKEND_IMAGE_TAG"
 
 usage() {
-  echo "Usage: $0 deploy <40-character-commit-sha> | rollback" >&2
+  echo "Usage: $0 deploy <commit-sha> | rollback" >&2
   exit 2
 }
 
@@ -198,8 +198,8 @@ deploy_component() {
   local old_tag
   local previous_tmp
 
-  [[ "$new_tag" =~ ^[0-9a-f]{40}$ ]] || {
-    echo "Deployment tag must be a full 40-character commit SHA." >&2
+  [[ "$new_tag" =~ ^[0-9a-f]{7,40}$ ]] || {
+    echo "Deployment tag must be a 7 to 40 character commit SHA." >&2
     return 2
   }
 
