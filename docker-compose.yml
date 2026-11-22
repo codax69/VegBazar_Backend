@@ -7,9 +7,9 @@ services:
       - .env
     environment:
       NODE_ENV: production
-      PORT: "4000"
+      PORT: "8001"
     ports:
-      - "127.0.0.1:4041:4000"
+      - "127.0.0.1:8001:8001"
     volumes:
       - ./data/invoices:/opt/app/temp
       - ./data/uploads:/opt/app/public/temp
